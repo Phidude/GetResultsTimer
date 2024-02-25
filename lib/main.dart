@@ -1,91 +1,295 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Pomodoro(),
+    ));
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  static const String _title = 'Flutter Stateful Clicker Counter';
-  // This widget is the root of your application.
+class Pomodoro extends StatefulWidget {
+  @override
+  _PomodoroState createState() => _PomodoroState();
+}
+
+class _PomodoroState extends State<Pomodoro> {
+  double percent = 0;
+  static int initialTimeInMinutes = 25;
+  int timeInMinutes = initialTimeInMinutes;
+  int timeInSeconds = initialTimeInMinutes * 60;
+
+  late Timer timer;
+  bool isTimerRunning = false;
+
+  _toggleTimer() {
+    if (isTimerRunning) {
+      timer.cancel();
+    } else {
+      _startTimer();
+    }
+
+    setState(() {
+      isTimerRunning = !isTimerRunning;
+      if (isTimerRunning) {
+        // Add initial color change when timer starts
+        percent = 0.01;
+      }
+    });
+  }
+
+  _startTimer() {
+    int time = timeInMinutes * 60;
+    double secondsPercent = (time / 100);
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (time > 0) {
+          time--;
+          if (time % 60 == 0) {
+            timeInMinutes--;
+          }
+          if (time % secondsPercent == 0) {
+            if (percent < 1) {
+              percent += 0.01;
+            } else {
+              percent = 1;
+            }
+          }
+        } else {
+          percent = 0;
+          timeInMinutes = initialTimeInMinutes;
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  _increaseTimer() {
+    setState(() {
+      initialTimeInMinutes++;
+      timeInMinutes = initialTimeInMinutes;
+      timeInSeconds = initialTimeInMinutes * 60;
+      percent = 0;
+    });
+  }
+
+  _decreaseTimer() {
+    if (initialTimeInMinutes > 1) {
+      setState(() {
+        initialTimeInMinutes--;
+        timeInMinutes = initialTimeInMinutes;
+        timeInSeconds = initialTimeInMinutes * 60;
+        percent = 0;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      theme: ThemeData(
-        // useMaterial3: true,
-        primarySwatch: Colors.blue,
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.grey[900],
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {}, // Placeholder, add navigation logic
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+          ),
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                height: 300.0,
+                child: CircularPercentIndicator(
+                  percent: percent,
+                  animation: true,
+                  animateFromLastPercent: true,
+                  radius: 150.0,
+                  lineWidth: 10.0,
+                  progressColor: Colors.cyanAccent,
+                  center: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "$timeInMinutes",
+                        style:
+                            TextStyle(color: Colors.cyanAccent, fontSize: 80.0),
+                      ),
+                      SizedBox(height: 0.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.remove),
+                            onPressed: _decreaseTimer,
+                            color: Colors.cyanAccent,
+                          ),
+                          SizedBox(width: 0.0),
+                          IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: _increaseTimer,
+                            color: Colors.cyanAccent,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              ElevatedButton(
+                onPressed: _toggleTimer,
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.grey[850],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100.0),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    isTimerRunning ? "Stop" : "Start",
+                    style: TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {}, // Placeholder, add navigation logic
+          child: Icon(Icons.arrow_forward),
+          backgroundColor: Colors.cyanAccent,
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
-      home: const MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-  // This class is the configuration for the state.
+class VariableRewards extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _VariableRewardsState createState() => _VariableRewardsState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _VariableRewardsState extends State<VariableRewards> {
+  List<String> rewardsList = [];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: const Text('Flutter Demo Click Counter'),
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          'Variable Rewards',
+          style: TextStyle(color: Colors.cyanAccent),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+        ),
+        width: double.infinity,
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            SizedBox(height: 10.0),
+            Expanded(
+              child: ListView.builder(
+                itemCount: rewardsList.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    color: Colors.grey[850],
+                    margin:
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    child: ListTile(
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            rewardsList[index],
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 18.0,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                rewardsList.removeAt(index);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 25),
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: TextField(
+                controller: TextEditingController(),
+                decoration: InputDecoration(
+                  hintText: 'Add a new reward...',
+                  hintStyle: TextStyle(color: Colors.cyanAccent),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.cyanAccent),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.cyanAccent),
+                  ),
+                ),
+                style: TextStyle(color: Colors.cyanAccent),
+                onSubmitted: (text) {
+                  setState(() {
+                    rewardsList.add(text);
+                  });
+                },
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+class SettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.grey[900],
+        title: Text('Settings'),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+        ),
+        width: double.infinity,
+        child: Center(
+          child: Text(
+            'This is the settings page!',
+            style: TextStyle(
+              color: Colors.cyanAccent,
+              fontSize: 20.0,
+            ),
+          ),
+        ),
       ),
     );
   }
