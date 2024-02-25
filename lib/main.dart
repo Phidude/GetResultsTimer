@@ -22,42 +22,32 @@ class _PomodoroState extends State<Pomodoro> {
   bool isTimerRunning = false;
 
   _toggleTimer() {
-    if (isTimerRunning) {
-      timer.cancel();
-    } else {
-      _startTimer();
-    }
-
     setState(() {
       isTimerRunning = !isTimerRunning;
       if (isTimerRunning) {
-        // Add initial color change when timer starts
-        percent = 0.01;
+        _startTimer();
+      } else {
+        timer.cancel();
       }
     });
   }
 
   _startTimer() {
-    int time = timeInMinutes * 60;
-    double secondsPercent = (time / 100);
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
-        if (time > 0) {
-          time--;
-          if (time % 60 == 0) {
+        if (timeInSeconds > 0) {
+          timeInSeconds--;
+          if (timeInSeconds % 60 == 0) {
             timeInMinutes--;
           }
-          if (time % secondsPercent == 0) {
-            if (percent < 1) {
-              percent += 0.01;
-            } else {
-              percent = 1;
-            }
-          }
+          percent = 1 - (timeInSeconds / (initialTimeInMinutes * 60));
         } else {
           percent = 0;
           timeInMinutes = initialTimeInMinutes;
+          timeInSeconds = initialTimeInMinutes * 60;
           timer.cancel();
+          isTimerRunning =
+              false; // Set isTimerRunning to false when timer completes
         }
       });
     });
@@ -92,7 +82,12 @@ class _PomodoroState extends State<Pomodoro> {
           actions: [
             IconButton(
               icon: Icon(Icons.settings),
-              onPressed: () {}, // Placeholder, add navigation logic
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
             ),
           ],
         ),
@@ -117,10 +112,31 @@ class _PomodoroState extends State<Pomodoro> {
                   center: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "$timeInMinutes",
-                        style:
-                            TextStyle(color: Colors.cyanAccent, fontSize: 80.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "$timeInMinutes",
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 80.0,
+                            ),
+                          ),
+                          Text(
+                            ":",
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 80.0,
+                            ),
+                          ),
+                          Text(
+                            "${(timeInSeconds % 60).toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 80.0,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 0.0),
                       Row(
@@ -169,7 +185,12 @@ class _PomodoroState extends State<Pomodoro> {
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {}, // Placeholder, add navigation logic
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => VariableRewards()),
+            );
+          },
           child: Icon(Icons.arrow_forward),
           backgroundColor: Colors.cyanAccent,
         ),
@@ -225,7 +246,7 @@ class _VariableRewardsState extends State<VariableRewards> {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
+                            icon: Icon(Icons.delete, color: Colors.cyanAccent),
                             onPressed: () {
                               setState(() {
                                 rewardsList.removeAt(index);
